@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Quiz Complete{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+  <div class="card shadow p-4 bg-white rounded" style="max-width: 500px; margin: auto;">
+    <h2 class="mb-3">🎉 Quiz Completed!</h2>
+    <p class="lead">You’ve completed your 10-question session.</p>
+    <h4 class="text-success">Final Score: <strong>{{ score }}/10</strong></h4>
+
+    {% if error %}
+      <p class="text-danger mt-3">{{ error }}</p>
+    {% endif %}
+
+    <a href="{% url 'quiz' %}" class="btn btn-primary mt-4">
+      <i class="bi bi-arrow-clockwise"></i> Restart Quiz
+    </a>
+  </div>
+</div>
+{% endblock %}

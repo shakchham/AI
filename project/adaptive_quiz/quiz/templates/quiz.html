@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Quiz{% endblock %}
+
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(135deg, #e0eafc, #cfdef3);
+  }
+  .quiz-card {
+    border-radius: 1rem;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+  .option-item {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  .option-item:hover {
+    background-color: #f0f8ff;
+    transform: scale(1.02);
+  }
+  .score-box {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+  }
+  #errorMessage {
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+  }
+</style>
+
+<div class="container py-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-dark">🚀 Adaptive Quiz</h3>
+    <div>
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger me-2">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </a>
+      <button class="btn btn-outline-primary" id="installBtn" style="display:none;">
+        <i class="bi bi-download"></i> Install App
+      </button>
+    </div>
+  </div>
+
+  <div class="progress mb-3" style="height: 20px;">
+    <div class="progress-bar bg-info" role="progressbar"
+         style="width: {{ progress|add:"0"|floatformat:0 }}0%;"
+         aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="10">
+      {{ progress }}/10
+    </div>
+  </div>
+
+  <div class="text-end text-muted mb-2">
+    ⏱ <span id="timer">15</span> seconds left
+  </div>
+
+  <div class="card quiz-card bg-white">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Question {{ question_number }}</h5>
+        <span class="badge {% if difficulty == 'Easy' %}bg-success{% elif difficulty == 'Medium' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+          {{ difficulty }}
+        </span>
+      </div>
+
+      <p class="lead mb-3">{{ question_text }}</p>
+
+      <ul class="list-group">
+        {% for option in options %}
+        <li class="list-group-item list-group-item-action option-item" onclick="submitAnswer('{{ option }}')">
+          {{ option }}
+        </li>
+        {% endfor %}
+      </ul>
+
+      <div class="score-box text-muted">
+        <strong>Score:</strong> {{ score }}
+      </div>
+
+      <div id="errorMessage" class="text-danger mt-3" style="display:none;">
+        ❌ Something went wrong or time ran out.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitAnswer(selected) {
+  clearInterval(timer);
+  fetch("{% url 'submit_answer' %}", {
+    method: "POST",
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({answer: selected})
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      if (data.correct) {
+        alert("✅ Correct!");
+      } else {
+        alert("❌ Incorrect.");
+      }
+      location.reload();
+    } else {
+      document.getElementById("errorMessage").style.display = "block";
+    }
+  });
+}
+
+// Timer countdown logic
+let timeLeft = 15;
+let timerDisplay = document.getElementById("timer");
+
+const timer = setInterval(() => {
+  timeLeft--;
+  timerDisplay.textContent = timeLeft;
+  if (timeLeft <= 0) {
+    clearInterval(timer);
+    document.getElementById("errorMessage").style.display = "block";
+    setTimeout(() => location.reload(), 1000);
+  }
+}, 1000);
+</script>
+{% endblock %}
